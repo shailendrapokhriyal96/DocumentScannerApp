@@ -13,6 +13,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "SmartDocumentScannerSDK"
+rootProject.name = "SmartDocumentScannerApp"
 include ':smart-document-scanner-sdk'
-include ':sdk-demo-app'
+include ':app'
