@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.viewpager2.widget.ViewPager2
 import com.smartdocumentscanner.sdk.SmartDocumentScanner
 import com.smartdocumentscanner.sdk.SmartDocumentScannerBuilder
 import com.smartdocumentscanner.sdk.callbacks.FileOperationCallbacks
@@ -24,6 +25,7 @@ class MainActivity : AppCompatActivity() {
     
     private lateinit var binding: ActivityMainBinding
     private lateinit var documentScanner: SmartDocumentScanner
+    private lateinit var imageAdapter: ImagePagerAdapter
     
     private val scanLauncher = registerForActivityResult(
         ActivityResultContracts.StartIntentSenderForResult()
@@ -36,8 +38,35 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         
+        setupViewPager()
         setupScanner()
         setupUI()
+    }
+    
+    private fun setupViewPager() {
+        imageAdapter = ImagePagerAdapter(mutableListOf())
+        binding.viewPager.adapter = imageAdapter
+        
+        // Configure ViewPager2 for better performance
+        binding.viewPager.offscreenPageLimit = 1
+        
+        // Add page change listener to update counter
+        binding.viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+            override fun onPageSelected(position: Int) {
+                super.onPageSelected(position)
+                updateImageCounter()
+            }
+        })
+    }
+    
+    private fun updateImageCounter() {
+        val totalImages = imageAdapter.itemCount
+        if (totalImages > 0) {
+            val currentPosition = binding.viewPager.currentItem + 1
+            binding.imageCounter.text = "Image $currentPosition of $totalImages"
+        } else {
+            binding.imageCounter.text = "No images scanned yet"
+        }
     }
     
     private fun setupScanner() {
@@ -68,8 +97,16 @@ class MainActivity : AppCompatActivity() {
         documentScanner.setScanCallbacks(object : ScanCallbacks {
             override fun onScanSuccess(result: ScanResult) {
                 runOnUiThread {
-                    binding.imageView.setImageBitmap(result.bitmap)
-                    Toast.makeText(this@MainActivity, "Document scanned successfully!", Toast.LENGTH_SHORT).show()
+                    imageAdapter.addImage(result.bitmap)
+                    // Move to the newly added image
+                    val newPosition = imageAdapter.itemCount - 1
+                    binding.viewPager.currentItem = newPosition
+                    updateImageCounter()
+                    
+                    // Force refresh the ViewPager
+                    binding.viewPager.adapter?.notifyDataSetChanged()
+                    
+                    Toast.makeText(this@MainActivity, "Document scanned successfully! Total images: ${imageAdapter.itemCount}", Toast.LENGTH_SHORT).show()
                 }
             }
             
@@ -127,35 +164,35 @@ class MainActivity : AppCompatActivity() {
         }
         
         binding.saveImageButton.setOnClickListener {
-            // Get the current bitmap from the ImageView
-            binding.imageView.drawable?.let { drawable: android.graphics.drawable.Drawable ->
-                if (drawable is android.graphics.drawable.BitmapDrawable) {
-                    documentScanner.saveAsImage(drawable.bitmap)
-                } else {
-                    Toast.makeText(this, "No image to save", Toast.LENGTH_SHORT).show()
-                }
+            // Get the current bitmap from the ViewPager
+            val currentPosition = binding.viewPager.currentItem
+            val currentBitmap = imageAdapter.getCurrentImage(currentPosition)
+            if (currentBitmap != null) {
+                documentScanner.saveAsImage(currentBitmap)
+            } else {
+                Toast.makeText(this, "No image to save", Toast.LENGTH_SHORT).show()
             }
         }
         
         binding.savePdfButton.setOnClickListener {
-            // Get the current bitmap from the ImageView
-            binding.imageView.drawable?.let { drawable: android.graphics.drawable.Drawable ->
-                if (drawable is android.graphics.drawable.BitmapDrawable) {
-                    documentScanner.saveAsPDF(drawable.bitmap)
-                } else {
-                    Toast.makeText(this, "No image to save as PDF", Toast.LENGTH_SHORT).show()
-                }
+            // Get the current bitmap from the ViewPager
+            val currentPosition = binding.viewPager.currentItem
+            val currentBitmap = imageAdapter.getCurrentImage(currentPosition)
+            if (currentBitmap != null) {
+                documentScanner.saveAsPDF(currentBitmap)
+            } else {
+                Toast.makeText(this, "No image to save as PDF", Toast.LENGTH_SHORT).show()
             }
         }
         
         binding.performOcrButton.setOnClickListener {
-            // Get the current bitmap from the ImageView
-            binding.imageView.drawable?.let { drawable: android.graphics.drawable.Drawable ->
-                if (drawable is android.graphics.drawable.BitmapDrawable) {
-                    documentScanner.performOCR(drawable.bitmap)
-                } else {
-                    Toast.makeText(this, "No image to perform OCR on", Toast.LENGTH_SHORT).show()
-                }
+            // Get the current bitmap from the ViewPager
+            val currentPosition = binding.viewPager.currentItem
+            val currentBitmap = imageAdapter.getCurrentImage(currentPosition)
+            if (currentBitmap != null) {
+                documentScanner.performOCR(currentBitmap)
+            } else {
+                Toast.makeText(this, "No image to perform OCR on", Toast.LENGTH_SHORT).show()
             }
         }
     }

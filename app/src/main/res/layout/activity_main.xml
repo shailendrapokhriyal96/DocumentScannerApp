@@ -27,13 +27,21 @@
             android:textSize="16sp"
             android:layout_marginBottom="16dp" />
 
-        <ImageView
-            android:id="@+id/imageView"
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/viewPager"
             android:layout_width="match_parent"
             android:layout_height="200dp"
-            android:background="@color/light_gray"
-            android:scaleType="fitCenter"
             android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:id="@+id/imageCounter"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="No images scanned yet"
+            android:textSize="12sp"
+            android:gravity="center"
+            android:layout_marginBottom="16dp"
+            android:textColor="@color/text_secondary" />
 
         <LinearLayout
             android:layout_width="match_parent"
