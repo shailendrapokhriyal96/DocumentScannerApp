@@ -1,2 +1,18 @@
-rootProject.name = 'SmartDocumentScannerApp'
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+rootProject.name = "SmartDocumentScannerApp"
+include ':smart-document-scanner-sdk'
 include ':app'
